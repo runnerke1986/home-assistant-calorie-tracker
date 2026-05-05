@@ -786,7 +786,7 @@ class DailyDataCard extends LitElement {
               }
             }, 200);
           }
-        }).catch(() => {});
+        }).catch(() => { });
       } catch (err) {
         // ignore
       }
@@ -826,8 +826,8 @@ class DailyDataCard extends LitElement {
   _handleResize() {
     // Reposition any open modals when window resizes
     if (this._showEditPopup || this._showAddPopup || this._showAnalyzerSelect ||
-        this._showAnalysisTypeSelect || this._showPhotoUpload || this._showPhotoReview ||
-        this._showMissingLLMModal || this._showChatAssist) {
+      this._showAnalysisTypeSelect || this._showPhotoUpload || this._showPhotoReview ||
+      this._showMissingLLMModal || this._showChatAssist) {
       this._positionModalsInContentArea();
     }
   }
@@ -1076,7 +1076,7 @@ class DailyDataCard extends LitElement {
     return v !== undefined && v !== null && v !== '' && !isNaN(Number(v));
   }
 
-  _validateMacroCalories(totalCalories, p, c, f, a, setError, silent=false) {
+  _validateMacroCalories(totalCalories, p, c, f, a, setError, silent = false) {
     if (!this.profile?.attributes?.track_macros) return true; // skip if macros not tracked
     if (!totalCalories || isNaN(Number(totalCalories))) return true; // nothing to compare
     const cal = Number(totalCalories);
@@ -1255,27 +1255,27 @@ class DailyDataCard extends LitElement {
     const profileBmrAndNeat = this.profile?.attributes?.bmr_and_neat;
     const bmrAndNeat = logBmrAndNeat ?? profileBmrAndNeat ?? null;
 
-  // Macros: protein (p), carbs (c), fat (f), alcohol (a)
-  const macros = this.log?.macros ?? null;
-  const macrosEnabled = Boolean(this.profile?.attributes?.track_macros);
-  const protein = macros ? Number(macros.p ?? macros.protein ?? 0) : 0;
-  const carbs = macros ? Number(macros.c ?? macros.carbs ?? 0) : 0;
-  const fat = macros ? Number(macros.f ?? macros.fat ?? 0) : 0;
-  const alcohol = macros ? Number(macros.a ?? macros.alcohol ?? 0) : 0;
+    // Macros: protein (p), carbs (c), fat (f), alcohol (a)
+    const macros = this.log?.macros ?? null;
+    const macrosEnabled = Boolean(this.profile?.attributes?.track_macros);
+    const protein = macros ? Number(macros.p ?? macros.protein ?? 0) : 0;
+    const carbs = macros ? Number(macros.c ?? macros.carbs ?? 0) : 0;
+    const fat = macros ? Number(macros.f ?? macros.fat ?? 0) : 0;
+    const alcohol = macros ? Number(macros.a ?? macros.alcohol ?? 0) : 0;
 
-  // Calculate calories from each macro and percentages
-  const proteinCals = protein * 4;
-  const carbsCals = carbs * 4;
-  const fatCals = fat * 9;
-  const alcoholCals = alcohol * 7;
-  const totalMacroCals = proteinCals + carbsCals + fatCals + alcoholCals;
+    // Calculate calories from each macro and percentages
+    const proteinCals = protein * 4;
+    const carbsCals = carbs * 4;
+    const fatCals = fat * 9;
+    const alcoholCals = alcohol * 7;
+    const totalMacroCals = proteinCals + carbsCals + fatCals + alcoholCals;
 
-  const proteinPercent = totalMacroCals > 0 ? Math.round((proteinCals / totalMacroCals) * 100) : 0;
-  const carbsPercent = totalMacroCals > 0 ? Math.round((carbsCals / totalMacroCals) * 100) : 0;
-  const fatPercent = totalMacroCals > 0 ? Math.round((fatCals / totalMacroCals) * 100) : 0;
-  const alcoholPercent = totalMacroCals > 0 ? Math.round((alcoholCals / totalMacroCals) * 100) : 0;
+    const proteinPercent = totalMacroCals > 0 ? Math.round((proteinCals / totalMacroCals) * 100) : 0;
+    const carbsPercent = totalMacroCals > 0 ? Math.round((carbsCals / totalMacroCals) * 100) : 0;
+    const fatPercent = totalMacroCals > 0 ? Math.round((fatCals / totalMacroCals) * 100) : 0;
+    const alcoholPercent = totalMacroCals > 0 ? Math.round((alcoholCals / totalMacroCals) * 100) : 0;
 
-  const shouldShowMacros = macrosEnabled;
+    const shouldShowMacros = macrosEnabled;
 
     // Arrow SVGs with theme-aware color (inherits text color)
     const arrowDown = html`
@@ -1465,14 +1465,14 @@ class DailyDataCard extends LitElement {
     this._offSearching = true;
     this._offError = "";
     this._offResults = [];
-    
+
     try {
       // Ask the Home Assistant backend to perform the search to avoid CORS issues
       const data = await this.hass.callWS({
         type: "calorie_tracker/search_off",
         query: this._offQuery
       });
-      
+
       this._offResults = data.products || [];
       if (this._offResults.length === 0) {
         this._offError = "No products found.";
@@ -1493,24 +1493,24 @@ class DailyDataCard extends LitElement {
 
   _confirmOffItem = () => {
     if (!this._offSelectedItem) return;
-    
+
     const item = this._offSelectedItem;
     const nutriments = item.nutriments || {};
     const multiplier = (this._offPortion || 0) / 100;
-    
+
     // Fallback logic: some products might only have per serving data, but OpenFoodFacts standard is _100g.
     const getNutrient = (name) => {
       if (nutriments[`${name}_100g`] !== undefined) return parseFloat(nutriments[`${name}_100g`]);
       if (nutriments[`${name}_value`] !== undefined) return parseFloat(nutriments[`${name}_value`]); // Sometimes standard value is per 100g
       return 0;
     };
-    
+
     const name = (item.brands ? item.brands + ' ' : '') + (item.product_name || 'Unknown Item');
     const calories = Math.round(getNutrient('energy-kcal') * multiplier);
     const p = (getNutrient('proteins') * multiplier).toFixed(1);
     const c = (getNutrient('carbohydrates') * multiplier).toFixed(1);
     const f = (getNutrient('fat') * multiplier).toFixed(1);
-    
+
     this._addData = {
       ...this._addData,
       food_item: name,
@@ -1520,7 +1520,7 @@ class DailyDataCard extends LitElement {
       f: parseFloat(f) > 0 ? f : '',
       a: ''
     };
-    
+
     this._closeOffSearch(); // This will also restore the Add Entry popup
   };
 
@@ -1647,7 +1647,7 @@ class DailyDataCard extends LitElement {
 
   _onEditInput(e, field) {
     let value = e.target.value;
-    if (["p","c","f","a"].includes(field)) {
+    if (["p", "c", "f", "a"].includes(field)) {
       value = this._sanitizeDecimal(value);
       // Reflect sanitized value in the live input if it changed
       if (value !== e.target.value) {
@@ -1896,7 +1896,7 @@ class DailyDataCard extends LitElement {
 
   _onAddInputChange = (e, field) => {
     let value = e.target.value;
-    if (["p","c","f","a"].includes(field)) {
+    if (["p", "c", "f", "a"].includes(field)) {
       value = this._sanitizeDecimal(value);
       if (value !== e.target.value) {
         e.target.value = value;
@@ -1959,27 +1959,27 @@ class DailyDataCard extends LitElement {
         entry_type: this._addEntryType,
         entry: this._addEntryType === "food"
           ? {
-              food_item: this._addData.food_item,
-              calories: Number(this._addData.calories),
-              timestamp,
-              ...(this._isValidNumberStr(this._addData.p) ? { p: Number(this._addData.p) } : {}),
-              ...(this._isValidNumberStr(this._addData.c) ? { c: Number(this._addData.c) } : {}),
-              ...(this._isValidNumberStr(this._addData.f) ? { f: Number(this._addData.f) } : {}),
-              ...(this._isValidNumberStr(this._addData.a) ? { a: Number(this._addData.a) } : {}),
-            }
+            food_item: this._addData.food_item,
+            calories: Number(this._addData.calories),
+            timestamp,
+            ...(this._isValidNumberStr(this._addData.p) ? { p: Number(this._addData.p) } : {}),
+            ...(this._isValidNumberStr(this._addData.c) ? { c: Number(this._addData.c) } : {}),
+            ...(this._isValidNumberStr(this._addData.f) ? { f: Number(this._addData.f) } : {}),
+            ...(this._isValidNumberStr(this._addData.a) ? { a: Number(this._addData.a) } : {}),
+          }
           : {
-                exercise_type: this._addData.exercise_type,
-                // Parse duration (allow minutes or HH:MM[:SS])
-                ...(this._addData.duration_minutes ? (() => {
-                  const parsed = this._parseDurationToMinutes(this._addData.duration_minutes);
-                  if (parsed === undefined) {
-                    this._addError = 'Duration must be minutes (e.g. 45) or HH:MM or HH:MM:SS';
-                  }
-                  return parsed !== undefined ? { duration_minutes: Number(parsed) } : {};
-                })() : {}),
-                calories_burned: Number(this._addData.calories_burned),
-                timestamp
-            }
+            exercise_type: this._addData.exercise_type,
+            // Parse duration (allow minutes or HH:MM[:SS])
+            ...(this._addData.duration_minutes ? (() => {
+              const parsed = this._parseDurationToMinutes(this._addData.duration_minutes);
+              if (parsed === undefined) {
+                this._addError = 'Duration must be minutes (e.g. 45) or HH:MM or HH:MM:SS';
+              }
+              return parsed !== undefined ? { duration_minutes: Number(parsed) } : {};
+            })() : {}),
+            calories_burned: Number(this._addData.calories_burned),
+            timestamp
+          }
       },
       bubbles: true,
       composed: true,
@@ -2017,7 +2017,7 @@ class DailyDataCard extends LitElement {
             ${this._addEntryType === "food" ? html`
               <div class="edit-label" style="display:flex; justify-content:space-between; align-items:center;">
                 Item
-                <button class="ha-btn" style="padding: 2px 8px; font-size: 0.85em; min-height: 24px;" @click=${this._openOffSearch}>
+                <button class="ha-btn" style="padding: 2px 8px; font-size: 0.85em; min-height: 24px; margin-left: 5px;" @click=${this._openOffSearch}>
                   Search Open Food Facts 🔍
                 </button>
               </div>
@@ -2947,10 +2947,10 @@ class DailyDataCard extends LitElement {
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
-    const result = await response.json();
-    this._photoLoading = false;
+      const result = await response.json();
+      this._photoLoading = false;
 
-        if (isBodyFat) {
+      if (isBodyFat) {
         // Handle body fat analysis result
         if (result?.success && result?.body_fat_data) {
           // Show review modal for body fat data
@@ -3050,7 +3050,7 @@ class DailyDataCard extends LitElement {
     return html`
       ${this._photoReviewItems.map((item, idx) => html`
         <div style="padding:6px 0;border-bottom:1px solid var(--divider-color,#ddd);">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:${macrosEnabled ? '6px':'0'};">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:${macrosEnabled ? '6px' : '0'};">
             <input type="checkbox" .checked=${item.selected} @change=${e => this._togglePhotoReviewItem(idx, e)} />
             <input data-edit-field="photo_item_${idx}_food_item" class="edit-input" style="flex:2;" type="text" .value=${item.food_item} @input=${e => this._editPhotoReviewItem(idx, 'food_item', e)} placeholder="Food item" />
             <input data-edit-field="photo_item_${idx}_calories" class="edit-input" style="width:80px;" type="number" min="0" .value=${item.calories} @input=${e => this._editPhotoReviewItem(idx, 'calories', e)} placeholder="Calories" />
@@ -3117,20 +3117,20 @@ class DailyDataCard extends LitElement {
 
   _editPhotoReviewItem(idx, field, e) {
     const items = [...this._photoReviewItems];
-  const numericFields = ['calories','p','f','c','a','percentage'];
-  const raw = e.target.value;
-  if (["p","c","f","c","a","percentage"].includes(field) && field !== 'calories') {
-    // For macro fields keep as sanitized string until final add
-    const sanitized = this._sanitizeDecimal(raw);
-    if (sanitized !== raw) {
-      e.target.value = sanitized;
+    const numericFields = ['calories', 'p', 'f', 'c', 'a', 'percentage'];
+    const raw = e.target.value;
+    if (["p", "c", "f", "c", "a", "percentage"].includes(field) && field !== 'calories') {
+      // For macro fields keep as sanitized string until final add
+      const sanitized = this._sanitizeDecimal(raw);
+      if (sanitized !== raw) {
+        e.target.value = sanitized;
+      }
+      items[idx] = { ...items[idx], [field]: sanitized };
+    } else if (numericFields.includes(field)) {
+      items[idx] = { ...items[idx], [field]: raw === '' ? undefined : Number(raw) };
+    } else {
+      items[idx] = { ...items[idx], [field]: raw };
     }
-    items[idx] = { ...items[idx], [field]: sanitized };
-  } else if (numericFields.includes(field)) {
-    items[idx] = { ...items[idx], [field]: raw === '' ? undefined : Number(raw) };
-  } else {
-    items[idx] = { ...items[idx], [field]: raw };
-  }
     this._photoReviewItems = items;
   }
 
@@ -3239,22 +3239,22 @@ class DailyDataCard extends LitElement {
           detail: {
             entry_type: 'food',
             entry: {
-          food_item: item.food_item,
-          calories: Number(item.calories),
-          timestamp,
-          analyzer: this._photoReviewAnalyzer,
-          raw_result: this._photoReviewRaw,
-            ...(this._isValidNumberStr(item.p) ? { p: Number(item.p) } : {}),
-            ...(this._isValidNumberStr(item.f) ? { f: Number(item.f) } : {}),
-            ...(this._isValidNumberStr(item.c) ? { c: Number(item.c) } : {}),
-            ...(this._isValidNumberStr(item.a) ? { a: Number(item.a) } : {}),
-        }
-      },
-      bubbles: true,
-      composed: true,
-    }));
-  });
-}
+              food_item: item.food_item,
+              calories: Number(item.calories),
+              timestamp,
+              analyzer: this._photoReviewAnalyzer,
+              raw_result: this._photoReviewRaw,
+              ...(this._isValidNumberStr(item.p) ? { p: Number(item.p) } : {}),
+              ...(this._isValidNumberStr(item.f) ? { f: Number(item.f) } : {}),
+              ...(this._isValidNumberStr(item.c) ? { c: Number(item.c) } : {}),
+              ...(this._isValidNumberStr(item.a) ? { a: Number(item.a) } : {}),
+            }
+          },
+          bubbles: true,
+          composed: true,
+        }));
+      });
+    }
 
     this._closePhotoReview();
   }
@@ -3294,7 +3294,7 @@ class DailyDataCard extends LitElement {
   _closeMissingLLMModal = () => {
     this._showMissingLLMModal = false;
     this._missingLLMModalType = null;
-   };
+  };
 
   _renderMissingLLMModal() {
     if (!this._showMissingLLMModal) return '';
@@ -3316,7 +3316,7 @@ class DailyDataCard extends LitElement {
       { name: 'Google Generative AI Conversation', url: 'https://www.home-assistant.io/integrations/google_generative_ai_conversation' },
       { name: 'OpenAI Conversation', url: 'https://www.home-assistant.io/integrations/openai_conversation' },
       { name: 'Ollama', url: 'https://www.home-assistant.io/integrations/ollama' }
-        ];
+    ];
 
     return html`
       <div class="modal" @click=${this._closeMissingLLMModal}>
@@ -3324,9 +3324,9 @@ class DailyDataCard extends LitElement {
           <div class="modal-header">${title}</div>
           <div style="margin-bottom: 16px; line-height: 1.5;">
             ${isAnalyzers
-              ? html`To analyze photos, you need an AI Task service from one of the supported integrations below. AI Task requires Home Assistant 2025.7 or later.:`
-              : html`To use the chat assistant, you need a conversation agent integration. Here are a few options:`
-            }
+        ? html`To analyze photos, you need an AI Task service from one of the supported integrations below. AI Task requires Home Assistant 2025.7 or later.:`
+        : html`To use the chat assistant, you need a conversation agent integration. Here are a few options:`
+      }
           </div>
           <ul style="margin: 0 0 20px 20px; padding: 0; line-height: 1.6;">
             ${(isAnalyzers ? analyzer_integrations : conversation_integrations).map(integration => html`
@@ -3349,10 +3349,10 @@ class DailyDataCard extends LitElement {
           </ul>
           <div style="font-size: 0.9em; color: var(--secondary-text-color, #666); margin-bottom: 16px; line-height: 1.4;">
             ${isAnalyzers
-              ? html`Note: For paid services, standard API rates apply.<br><br>
+        ? html`Note: For paid services, standard API rates apply.<br><br>
                      If you would like another image analyzer supported, <a href="https://github.com/kgstorm/home-assistant-calorie-tracker/issues" target="_blank" style="color: var(--primary-color, #03a9f4); text-decoration: none;">submit an issue here</a>.`
-              : html`Note: For paid services, standard API rates apply.`
-            }
+        : html`Note: For paid services, standard API rates apply.`
+      }
           </div>
           <div class="edit-actions">
             <button class="ha-btn" @click=${this._closeMissingLLMModal}>Close</button>
@@ -3413,8 +3413,8 @@ class DailyDataCard extends LitElement {
         const rawAgents = agentsResp.agents || [];
         this._conversationAgents = rawAgents.filter(a => {
           const isHomeAssistant = a.id === 'conversation.home_assistant' ||
-                                  a.id === 'homeassistant' ||
-                                  a.id === 'home_assistant';
+            a.id === 'homeassistant' ||
+            a.id === 'home_assistant';
           return !isHomeAssistant;
         });
 
@@ -3439,7 +3439,7 @@ class DailyDataCard extends LitElement {
         this._selectedAgent = null;
       }
     } catch (err) {
-  // Failed to fetch pipelines or agents
+      // Failed to fetch pipelines or agents
       this._assistPipelines = [];
       this._selectedPipeline = null;
       this._conversationAgents = [];
@@ -3531,14 +3531,14 @@ class DailyDataCard extends LitElement {
           </div>
           <div style="flex:1;overflow-y:auto;margin-bottom:12px;border:1px solid ${border};padding:8px 6px 8px 6px;background:${chatBg};">
             ${this._chatHistory.length === 0
-              ? html`<div style="color:${isDark ? '#aaa' : '#888'};text-align:center;">No conversation yet.</div>`
-              : this._chatHistory.map(msg => html`
+        ? html`<div style="color:${isDark ? '#aaa' : '#888'};text-align:center;">No conversation yet.</div>`
+        : this._chatHistory.map(msg => html`
                   <div style="margin-bottom:8px;">
                     <div style="font-weight:bold;color:${isDark ? '#90caf9' : '#1976d2'};">${msg.role === "user" ? "You" : "Assistant"}:</div>
                     <div style="white-space:pre-line;">${msg.text}</div>
                   </div>
                 `)
-            }
+      }
           </div>
           <div style="margin-bottom:12px;">
             <div style="display:flex;gap:8px;align-items:flex-end;">
@@ -3552,11 +3552,11 @@ class DailyDataCard extends LitElement {
                 @input=${e => this._onChatInput(e)}
                 @focus=${this._onChatInputFocus}
                 @keydown=${e => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    this._processChatCommand();
-                  }
-                }}
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          this._processChatCommand();
+        }
+      }}
               ></textarea>
               <button
                 title="Send Message"
