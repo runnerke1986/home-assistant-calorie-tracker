@@ -8,10 +8,13 @@ from pathlib import Path
 
 import voluptuous as vol
 
+import urllib.parse
+
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .calorie_tracker_user import CalorieTrackerUser
 from .const import (
@@ -748,6 +751,27 @@ async def websocket_get_weight_history(hass: HomeAssistant, connection, msg):
     connection.send_result(msg["id"], {"weight_history": weight_history})
 
 
+async def websocket_search_open_food_facts(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Search Open Food Facts for a food item."""
+    query = msg.get("query")
+    if not query:
+        connection.send_error(msg["id"], "invalid_format", "Query is required.")
+        return
+
+    url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={urllib.parse.quote(query)}&search_simple=1&action=process&json=1&fields=product_name,brands,nutriments,serving_size,quantity,code&page_size=20"
+    
+    session = async_get_clientsession(hass)
+    try:
+        async with session.get(url, headers={"User-Agent": "HomeAssistantCalorieTracker/1.0 (Integration for Home Assistant)"}) as resp:
+            resp.raise_for_status()
+            data = await resp.json()
+            connection.send_result(msg["id"], data)
+    except Exception as err:
+        _LOGGER.error("Failed to search Open Food Facts: %s", err)
+        connection.send_error(msg["id"], "unknown_error", str(err))
+
 def register_websockets(hass: HomeAssistant) -> None:
     """Register Calorie Tracker websocket commands."""
     websocket_api.async_register_command(
@@ -940,4 +964,14 @@ def register_websockets(hass: HomeAssistant) -> None:
                 "entity_id": str,
             }
         )(websocket_api.async_response(websocket_get_weight_history)),
+    )
+
+    websocket_api.async_register_command(
+        hass,
+        websocket_api.websocket_command(
+            {
+                "type": "calorie_tracker/search_off",
+                "query": str,
+            }
+        )(websocket_api.async_response(websocket_search_open_food_facts)),
     )

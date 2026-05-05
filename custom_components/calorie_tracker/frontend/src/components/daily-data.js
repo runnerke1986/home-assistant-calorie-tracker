@@ -1467,15 +1467,12 @@ class DailyDataCard extends LitElement {
     this._offResults = [];
     
     try {
-      // Open Food Facts cgi/search.pl API (properly supports full-text search_terms)
-      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(this._offQuery)}&search_simple=1&action=process&json=1&fields=product_name,brands,nutriments,serving_size,quantity,code&page_size=20`;
-      const response = await fetch(url);
+      // Ask the Home Assistant backend to perform the search to avoid CORS issues
+      const data = await this.hass.callWS({
+        type: "calorie_tracker/search_off",
+        query: this._offQuery
+      });
       
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      
-      const data = await response.json();
       this._offResults = data.products || [];
       if (this._offResults.length === 0) {
         this._offError = "No products found.";
