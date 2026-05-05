@@ -139,6 +139,13 @@ class DailyDataCard extends LitElement {
     _showMetrics: { type: Boolean, state: true },
     _keyboardVisible: { type: Boolean, state: true },
     _keyboardHeight: { type: Number, state: true },
+    _showOffSearch: { type: Boolean, state: true },
+    _offQuery: { type: String, state: true },
+    _offResults: { attribute: false, state: true },
+    _offSearching: { type: Boolean, state: true },
+    _offError: { type: String, state: true },
+    _offSelectedItem: { attribute: false, state: true },
+    _offPortion: { type: Number, state: true },
   };
 
   static styles = [
@@ -740,6 +747,15 @@ class DailyDataCard extends LitElement {
     this._missingLLMModalType = null;
     // Validation errors
     this._editError = "";
+
+    // Open Food Facts state
+    this._showOffSearch = false;
+    this._offQuery = "";
+    this._offResults = [];
+    this._offSearching = false;
+    this._offError = "";
+    this._offSelectedItem = null;
+    this._offPortion = 100;
   }
 
   connectedCallback() {
@@ -1094,6 +1110,7 @@ class DailyDataCard extends LitElement {
     this._showMissingLLMModal = false;
     this._useSystemCapture = false;
     this._systemCaptureReason = null;
+    this._showOffSearch = false;
   }
 
   _toggleMetrics() {
@@ -1418,6 +1435,172 @@ class DailyDataCard extends LitElement {
       ${this._renderPhotoProcessingModal()}
       ${this._showChatAssist ? this._renderChatAssistModal() : ""}
       ${this._showMissingLLMModal ? this._renderMissingLLMModal() : ""}
+      ${this._showOffSearch ? this._renderOffSearchModal() : ""}
+    `;
+  }
+
+  // ===========================================================================
+  // OPEN FOOD FACTS INTEGRATION
+  // ===========================================================================
+
+  _openOffSearch = () => {
+    this._showOffSearch = true;
+    this._offQuery = "";
+    this._offResults = [];
+    this._offSearching = false;
+    this._offError = "";
+    this._offSelectedItem = null;
+    this._offPortion = 100;
+  };
+
+  _closeOffSearch = () => {
+    this._showOffSearch = false;
+    this._offSelectedItem = null;
+  };
+
+  async _searchOpenFoodFacts() {
+    if (!this._offQuery || this._offQuery.trim() === "") return;
+    this._offSearching = true;
+    this._offError = "";
+    this._offResults = [];
+    
+    try {
+      // Open Food Facts v2 search API
+      const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(this._offQuery)}&fields=product_name,brands,nutriments,serving_size,quantity,code&page_size=20`;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'HomeAssistantCalorieTracker/1.0 (Integration for Home Assistant)'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      
+      const data = await response.json();
+      this._offResults = data.products || [];
+      if (this._offResults.length === 0) {
+        this._offError = "No products found.";
+      }
+    } catch (err) {
+      this._offError = "Error connecting to Open Food Facts.";
+      console.error(err);
+    } finally {
+      this._offSearching = false;
+    }
+  }
+
+  _selectOffItem = (item) => {
+    this._offSelectedItem = item;
+    // Try to guess default portion if a serving size exists, else 100
+    this._offPortion = 100;
+  };
+
+  _confirmOffItem = () => {
+    if (!this._offSelectedItem) return;
+    
+    const item = this._offSelectedItem;
+    const nutriments = item.nutriments || {};
+    const multiplier = (this._offPortion || 0) / 100;
+    
+    // Fallback logic: some products might only have per serving data, but OpenFoodFacts standard is _100g.
+    const getNutrient = (name) => {
+      if (nutriments[`${name}_100g`] !== undefined) return parseFloat(nutriments[`${name}_100g`]);
+      if (nutriments[`${name}_value`] !== undefined) return parseFloat(nutriments[`${name}_value`]); // Sometimes standard value is per 100g
+      return 0;
+    };
+    
+    const name = (item.brands ? item.brands + ' ' : '') + (item.product_name || 'Unknown Item');
+    const calories = Math.round(getNutrient('energy-kcal') * multiplier);
+    const p = (getNutrient('proteins') * multiplier).toFixed(1);
+    const c = (getNutrient('carbohydrates') * multiplier).toFixed(1);
+    const f = (getNutrient('fat') * multiplier).toFixed(1);
+    
+    this._addData = {
+      ...this._addData,
+      food_item: name,
+      calories: calories > 0 ? calories : '',
+      p: parseFloat(p) > 0 ? p : '',
+      c: parseFloat(c) > 0 ? c : '',
+      f: parseFloat(f) > 0 ? f : '',
+      a: ''
+    };
+    
+    this._closeOffSearch();
+  };
+
+  _renderOffSearchModal() {
+    return html`
+      <div class="modal" style="z-index: 2000;" @click=${this._closeOffSearch}>
+        <div class="modal-content" style="max-height: 80vh; display: flex; flex-direction: column;" @click=${e => e.stopPropagation()}>
+          <div class="modal-header">Search Open Food Facts</div>
+          
+          ${!this._offSelectedItem ? html`
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <input
+                class="edit-input"
+                type="text"
+                placeholder="Product name (e.g. Nutella)"
+                .value=${this._offQuery}
+                @input=${e => this._offQuery = e.target.value}
+                @keydown=${e => e.key === 'Enter' && this._searchOpenFoodFacts()}
+              />
+              <button class="ha-btn" @click=${() => this._searchOpenFoodFacts()}>Search</button>
+            </div>
+            
+            ${this._offSearching ? html`<div style="text-align:center; padding: 20px;">Searching...</div>` : ''}
+            ${this._offError ? html`<div style="color: #f44336; margin-bottom: 12px;">${this._offError}</div>` : ''}
+            
+            <div style="flex-grow: 1; overflow-y: auto; max-height: 400px;">
+              ${this._offResults.map(item => html`
+                <div 
+                  style="padding: 12px; border-bottom: 1px solid var(--divider-color, #eee); cursor: pointer; transition: background 0.2s;"
+                  @click=${() => this._selectOffItem(item)}
+                  onmouseover="this.style.background='var(--secondary-background-color, #f5f5f5)'"
+                  onmouseout="this.style.background='transparent'"
+                >
+                  <div style="font-weight: 500;">${item.product_name || 'Unknown'} ${item.quantity ? `(${item.quantity})` : ''}</div>
+                  <div style="font-size: 0.85em; color: var(--secondary-text-color, #666);">
+                    ${item.brands ? item.brands + ' • ' : ''} 
+                    ${item.nutriments?.['energy-kcal_100g'] ? `${Math.round(item.nutriments['energy-kcal_100g'])} kcal/100g` : 'No calorie data'}
+                  </div>
+                </div>
+              `)}
+            </div>
+          ` : html`
+            <div style="margin-bottom: 16px;">
+              <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 4px;">
+                ${this._offSelectedItem.brands ? this._offSelectedItem.brands + ' ' : ''}${this._offSelectedItem.product_name}
+              </div>
+              <div style="font-size: 0.9em; color: var(--secondary-text-color, #666); margin-bottom: 16px;">
+                ${this._offSelectedItem.nutriments?.['energy-kcal_100g'] ? `${Math.round(this._offSelectedItem.nutriments['energy-kcal_100g'])} kcal per 100g` : ''}
+                ${this._offSelectedItem.serving_size ? ` • Serving size: ${this._offSelectedItem.serving_size}` : ''}
+              </div>
+              
+              <div class="edit-label">Amount consumed (in grams or ml)</div>
+              <input
+                class="edit-input"
+                type="number"
+                min="0"
+                .value=${this._offPortion}
+                @input=${e => this._offPortion = e.target.value}
+                @keydown=${e => e.key === 'Enter' && this._confirmOffItem()}
+              />
+            </div>
+            
+            <div class="edit-actions">
+              <button class="ha-btn" @click=${this._confirmOffItem}>Confirm</button>
+              <button class="ha-btn secondary" @click=${() => this._offSelectedItem = null}>Back</button>
+            </div>
+          `}
+          
+          ${!this._offSelectedItem ? html`
+            <div class="edit-actions" style="margin-top: 16px;">
+              <button class="ha-btn secondary" @click=${this._closeOffSearch}>Close</button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
     `;
   }
 
@@ -1837,7 +2020,12 @@ class DailyDataCard extends LitElement {
               @input=${this._onAddTimeInput}
             />
             ${this._addEntryType === "food" ? html`
-              <div class="edit-label">Item</div>
+              <div class="edit-label" style="display:flex; justify-content:space-between; align-items:center;">
+                Item
+                <button class="ha-btn" style="padding: 2px 8px; font-size: 0.85em; min-height: 24px;" @click=${this._openOffSearch}>
+                  Search Open Food Facts 🔍
+                </button>
+              </div>
               <input
                 class="edit-input"
                 type="text"

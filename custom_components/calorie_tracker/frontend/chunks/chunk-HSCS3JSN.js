@@ -630,4 +630,4 @@ import{a as he,b as D,c as te,g as pe,h as fe}from"./chunk-EMR7U3YA.js";import{e
       }
     }
   `]);customElements.get("calorie-summary")||customElements.define("calorie-summary",q)});export{me as a};
-//# sourceMappingURL=chunk-4E4HTHAA.js.map
+//# sourceMappingURL=chunk-HSCS3JSN.js.map
