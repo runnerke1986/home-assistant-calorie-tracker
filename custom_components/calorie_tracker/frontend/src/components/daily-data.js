@@ -1469,11 +1469,7 @@ class DailyDataCard extends LitElement {
     try {
       // Open Food Facts v2 search API
       const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(this._offQuery)}&fields=product_name,brands,nutriments,serving_size,quantity,code&page_size=20`;
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'HomeAssistantCalorieTracker/1.0 (Integration for Home Assistant)'
-        }
-      });
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error("Failed to fetch data");
