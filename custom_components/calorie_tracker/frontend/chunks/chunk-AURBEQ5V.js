@@ -198,7 +198,7 @@ User request: ${i}`);let A={type:"conversation/process",text:x,conversation_id:t
       ${this._showChatAssist?this._renderChatAssistModal():""}
       ${this._showMissingLLMModal?this._renderMissingLLMModal():""}
       ${this._showOffSearch?this._renderOffSearchModal():""}
-    `}async _searchOpenFoodFacts(){if(!(!this._offQuery||this._offQuery.trim()==="")){this._offSearching=!0,this._offError="",this._offResults=[];try{let t=`https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(this._offQuery)}&fields=product_name,brands,nutriments,serving_size,quantity,code&page_size=20`,e=await fetch(t);if(!e.ok)throw new Error("Failed to fetch data");let i=await e.json();this._offResults=i.products||[],this._offResults.length===0&&(this._offError="No products found.")}catch(t){this._offError="Error connecting to Open Food Facts.",console.error(t)}finally{this._offSearching=!1}}}_renderOffSearchModal(){var t;return d`
+    `}async _searchOpenFoodFacts(){if(!(!this._offQuery||this._offQuery.trim()==="")){this._offSearching=!0,this._offError="",this._offResults=[];try{let t=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(this._offQuery)}&search_simple=1&action=process&json=1&fields=product_name,brands,nutriments,serving_size,quantity,code&page_size=20`,e=await fetch(t);if(!e.ok)throw new Error("Failed to fetch data");let i=await e.json();this._offResults=i.products||[],this._offResults.length===0&&(this._offError="No products found.")}catch(t){this._offError="Error connecting to Open Food Facts.",console.error(t)}finally{this._offSearching=!1}}}_renderOffSearchModal(){var t;return d`
       <div class="modal" style="z-index: 2000;" @click=${this._closeOffSearch}>
         <div class="modal-content" style="max-height: 80vh; display: flex; flex-direction: column;" @click=${e=>e.stopPropagation()}>
           <div class="modal-header">Search Open Food Facts</div>
@@ -1414,4 +1414,4 @@ User request: ${i}`);let A={type:"conversation/process",text:x,conversation_id:t
         }
       }
     `]);customElements.get("daily-data-card")||customElements.define("daily-data-card",C)});export{mt as a};
-//# sourceMappingURL=chunk-VYCTGHMB.js.map
+//# sourceMappingURL=chunk-AURBEQ5V.js.map

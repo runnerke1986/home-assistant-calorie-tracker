@@ -1467,8 +1467,8 @@ class DailyDataCard extends LitElement {
     this._offResults = [];
     
     try {
-      // Open Food Facts v2 search API
-      const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(this._offQuery)}&fields=product_name,brands,nutriments,serving_size,quantity,code&page_size=20`;
+      // Open Food Facts cgi/search.pl API (properly supports full-text search_terms)
+      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(this._offQuery)}&search_simple=1&action=process&json=1&fields=product_name,brands,nutriments,serving_size,quantity,code&page_size=20`;
       const response = await fetch(url);
       
       if (!response.ok) {
