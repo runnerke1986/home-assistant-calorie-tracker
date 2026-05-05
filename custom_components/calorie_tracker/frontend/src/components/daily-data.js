@@ -1444,6 +1444,7 @@ class DailyDataCard extends LitElement {
   // ===========================================================================
 
   _openOffSearch = () => {
+    this._showAddPopup = false; // Hide Add Entry popup temporarily
     this._showOffSearch = true;
     this._offQuery = "";
     this._offResults = [];
@@ -1456,6 +1457,7 @@ class DailyDataCard extends LitElement {
   _closeOffSearch = () => {
     this._showOffSearch = false;
     this._offSelectedItem = null;
+    this._showAddPopup = true; // Restore Add Entry popup
   };
 
   async _searchOpenFoodFacts() {
@@ -1526,7 +1528,7 @@ class DailyDataCard extends LitElement {
       a: ''
     };
     
-    this._closeOffSearch();
+    this._closeOffSearch(); // This will also restore the Add Entry popup
   };
 
   _renderOffSearchModal() {
