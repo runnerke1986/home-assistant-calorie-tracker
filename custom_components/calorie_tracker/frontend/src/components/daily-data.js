@@ -2017,7 +2017,7 @@ class DailyDataCard extends LitElement {
             ${this._addEntryType === "food" ? html`
               <div class="edit-label" style="display:flex; justify-content:space-between; align-items:center;">
                 Item
-                <button class="ha-btn" style="padding: 2px 8px; font-size: 0.85em; min-height: 24px; margin-left: 5px;" @click=${this._openOffSearch}>
+                <button class="ha-btn" style="padding: 2px 8px; font-size: 0.85em; min-height: 24px; margin-left: 5px !important;" @click=${this._openOffSearch}>
                   Search Open Food Facts 🔍
                 </button>
               </div>
