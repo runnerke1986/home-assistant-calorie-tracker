@@ -2094,9 +2094,11 @@ class DailyDataCard extends LitElement {
                   @focus=${() => { this._showHistoryDropdown = true; }}
                   @blur=${() => { setTimeout(() => this._showHistoryDropdown = false, 200); }}
                 />
-                ${this._showHistoryDropdown && this._foodHistory && this._foodHistory.length > 0 ? html`
+                ${this._showHistoryDropdown ? html`
                   <div style="position:absolute; top:100%; left:0; right:0; max-height:200px; overflow-y:auto; background:var(--card-background-color, #fff); border:1px solid var(--divider-color, #eee); border-radius:4px; z-index:2000; box-shadow:0 4px 12px rgba(0,0,0,0.15); margin-top:2px;">
-                    ${this._foodHistory
+                    ${(!this._foodHistory || this._foodHistory.length === 0) ? html`
+                      <div style="padding:10px 12px; color:var(--secondary-text-color, #888); font-style:italic; font-size:0.9em;">Geen recente items gevonden...</div>
+                    ` : this._foodHistory
                       .filter(h => h.food_item.toLowerCase().includes((this._addData.food_item || '').toLowerCase()))
                       .map(item => html`
                       <div style="padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--divider-color, #eee); display:flex; flex-direction:column; gap:2px;"
@@ -2116,6 +2118,9 @@ class DailyDataCard extends LitElement {
                         </div>
                       </div>
                     `)}
+                    ${(this._foodHistory && this._foodHistory.length > 0 && this._foodHistory.filter(h => h.food_item.toLowerCase().includes((this._addData.food_item || '').toLowerCase())).length === 0) ? html`
+                      <div style="padding:10px 12px; color:var(--secondary-text-color, #888); font-style:italic; font-size:0.9em;">Geen overeenkomsten...</div>
+                    ` : ''}
                   </div>
                 ` : ''}
               </div>
