@@ -147,6 +147,7 @@ class DailyDataCard extends LitElement {
     _offSelectedItem: { attribute: false, state: true },
     _offPortion: { type: Number, state: true },
     _foodHistory: { attribute: false, state: true },
+    _showHistoryDropdown: { type: Boolean, state: true },
   };
 
   static styles = [
@@ -760,6 +761,7 @@ class DailyDataCard extends LitElement {
     
     // Food history state
     this._foodHistory = [];
+    this._showHistoryDropdown = false;
   }
 
   connectedCallback() {
@@ -2049,9 +2051,6 @@ class DailyDataCard extends LitElement {
       <div class="modal" @click=${this._closeAddEntry}>
         <div class="modal-content" @click=${e => e.stopPropagation()}>
           <div class="modal-header">Add Entry</div>
-          <datalist id="food-history-list">
-            ${this._foodHistory?.map(item => html`<option value="${item.food_item}"></option>`)}
-          </datalist>
           <div style="margin-bottom: 16px;">
             <label>
               <input type="radio" name="add-type" value="food"
@@ -2081,14 +2080,45 @@ class DailyDataCard extends LitElement {
                   Search Open Food Facts 🔍
                 </button>
               </div>
-              <input
-                class="edit-input"
-                type="text"
-                list="food-history-list"
-                data-edit-field="food_item"
-                .value=${this._addData.food_item}
-                @input=${e => this._onAddInputChange(e, "food_item")}
-              />
+              <div style="position:relative; width: 100%;">
+                <input
+                  class="edit-input"
+                  type="text"
+                  autocomplete="off"
+                  data-edit-field="food_item"
+                  .value=${this._addData.food_item}
+                  @input=${e => {
+                    this._showHistoryDropdown = true;
+                    this._onAddInputChange(e, "food_item");
+                  }}
+                  @focus=${() => { this._showHistoryDropdown = true; }}
+                  @blur=${() => { setTimeout(() => this._showHistoryDropdown = false, 200); }}
+                />
+                ${this._showHistoryDropdown && this._foodHistory && this._foodHistory.length > 0 ? html`
+                  <div style="position:absolute; top:100%; left:0; right:0; max-height:200px; overflow-y:auto; background:var(--card-background-color, #fff); border:1px solid var(--divider-color, #eee); border-radius:4px; z-index:2000; box-shadow:0 4px 12px rgba(0,0,0,0.15); margin-top:2px;">
+                    ${this._foodHistory
+                      .filter(h => h.food_item.toLowerCase().includes((this._addData.food_item || '').toLowerCase()))
+                      .map(item => html`
+                      <div style="padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--divider-color, #eee); display:flex; flex-direction:column; gap:2px;"
+                           @mousedown=${(e) => { 
+                             // Use mousedown instead of click to fire before input blur
+                             e.preventDefault();
+                             this._addData = { ...this._addData, food_item: item.food_item };
+                             this._onAddInputChange({target: {value: item.food_item}}, "food_item");
+                             this._showHistoryDropdown = false;
+                           }}>
+                        <div style="font-weight:500; color:var(--primary-text-color, #333);">${item.food_item}</div>
+                        <div style="font-size:0.85em; color:var(--secondary-text-color, #888);">
+                          <span style="font-weight:600; color:var(--primary-color, #03a9f4);">${item.calories} Cal</span>
+                          ${item.p ? html` <span style="margin-left:6px;">P: ${item.p}g</span>` : ''}
+                          ${item.c ? html` <span style="margin-left:6px;">C: ${item.c}g</span>` : ''}
+                          ${item.f ? html` <span style="margin-left:6px;">F: ${item.f}g</span>` : ''}
+                        </div>
+                      </div>
+                    `)}
+                  </div>
+                ` : ''}
+              </div>
               <div class="edit-label">Calories</div>
               <input
                 class="edit-input"
