@@ -1183,16 +1183,39 @@ class DailyDataCard extends LitElement {
   }
 
   _renderHeader(dateStr) {
+    const pickerDate = this.selectedDate || getLocalDateString();
     return html`
       <div class="header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div class="header-text">
+        <div class="header-text" style="display:flex;align-items:center;gap:8px;">
           <span>${dateStr}</span>
+          <div style="position:relative; width: 24px; height: 24px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="fill:var(--primary-color, #03a9f4); cursor:pointer; position:absolute; top:2px; left:2px; pointer-events:none;">
+              <path d="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M19 19H5V8H19V19M7 10H9V12H7V10M11 10H13V12H11V10M15 10H17V12H15V10Z" />
+            </svg>
+            <input type="date"
+              style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;"
+              .value=${pickerDate}
+              @change=${this._onDateChange}
+              title="Select Date"
+            />
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;">
           ${this._renderActionButtons()}
         </div>
       </div>
     `;
+  }
+
+  _onDateChange(e) {
+    const newDate = e.target.value;
+    if (newDate) {
+      this.dispatchEvent(new CustomEvent("select-daily-date", {
+        detail: { date: newDate },
+        bubbles: true,
+        composed: true,
+      }));
+    }
   }
 
   _renderActionButtons() {
