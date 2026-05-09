@@ -751,6 +751,41 @@ async def websocket_get_weight_history(hass: HomeAssistant, connection, msg):
     connection.send_result(msg["id"], {"weight_history": weight_history})
 
 
+async def websocket_get_food_history(hass: HomeAssistant, connection, msg):
+    """Return all logged food history for a calorie tracker profile to be used as autocomplete/suggestions."""
+    entity_id = msg["entity_id"]
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.entities.get(entity_id)
+    if not entity_entry or entity_entry.config_entry_id is None:
+        connection.send_error(msg["id"], "not_found", "Entity not found for entity_id")
+        return
+    matching_entry = hass.config_entries.async_get_entry(entity_entry.config_entry_id)
+    if not matching_entry:
+        connection.send_error(
+            msg["id"], "not_found", "Config entry not found for entity_id"
+        )
+        return
+    user: CalorieTrackerUser = matching_entry.runtime_data["user"]
+    
+    entries = user.storage().get_food_entries()
+    
+    history_dict = {}
+    for entry in sorted(entries, key=lambda x: x.get("timestamp", ""), reverse=True):
+        item = entry.get("food_item")
+        if item and item.lower() not in history_dict:
+            history_dict[item.lower()] = {
+                "food_item": item,
+                "calories": entry.get("calories"),
+                "c": entry.get("c"),
+                "p": entry.get("p"),
+                "f": entry.get("f"),
+                "a": entry.get("a"),
+            }
+            
+    history = list(history_dict.values())
+    connection.send_result(msg["id"], {"food_history": history})
+
+
 async def websocket_search_open_food_facts(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
@@ -764,7 +799,7 @@ async def websocket_search_open_food_facts(
     
     session = async_get_clientsession(hass)
     try:
-        async with session.get(url, headers={"User-Agent": "HomeAssistantCalorieTracker/1.0 (Integration for Home Assistant)"}) as resp:
+        async with session.get(url, headers={"User-Agent": "HomeAssistantCalorieTracker/1.0 - demetterandy@gmail.com"}) as resp:
             resp.raise_for_status()
             data = await resp.json()
             connection.send_result(msg["id"], data)
@@ -974,4 +1009,14 @@ def register_websockets(hass: HomeAssistant) -> None:
                 "query": str,
             }
         )(websocket_api.async_response(websocket_search_open_food_facts)),
+    )
+
+    websocket_api.async_register_command(
+        hass,
+        websocket_api.websocket_command(
+            {
+                "type": "calorie_tracker/get_food_history",
+                "entity_id": str,
+            }
+        )(websocket_api.async_response(websocket_get_food_history)),
     )

@@ -146,6 +146,7 @@ class DailyDataCard extends LitElement {
     _offError: { type: String, state: true },
     _offSelectedItem: { attribute: false, state: true },
     _offPortion: { type: Number, state: true },
+    _foodHistory: { attribute: false, state: true },
   };
 
   static styles = [
@@ -756,6 +757,9 @@ class DailyDataCard extends LitElement {
     this._offError = "";
     this._offSelectedItem = null;
     this._offPortion = 100;
+    
+    // Food history state
+    this._foodHistory = [];
   }
 
   connectedCallback() {
@@ -1866,6 +1870,18 @@ class DailyDataCard extends LitElement {
   // ADD ENTRY FUNCTIONALITY
   // ===========================================================================
 
+  async _fetchFoodHistory() {
+    try {
+      const data = await this.hass.callWS({
+        type: "calorie_tracker/get_food_history",
+        entity_id: this.profile.entity_id,
+      });
+      this._foodHistory = data.food_history || [];
+    } catch (err) {
+      console.error("Failed to fetch food history", err);
+    }
+  }
+
   _openAddEntry = () => {
     this._closeAllModals();
     this._addEntryType = "food";
@@ -1882,6 +1898,7 @@ class DailyDataCard extends LitElement {
     };
     this._addError = "";
     this._showAddPopup = true;
+    this._fetchFoodHistory();
   };
 
   _closeAddEntry = () => {
@@ -1912,6 +1929,23 @@ class DailyDataCard extends LitElement {
     }
     this._addData = { ...this._addData, [field]: value };
     this._addError = "";
+
+    // Autocomplete macros if food_item matches history
+    if (field === "food_item" && this._foodHistory) {
+      const match = this._foodHistory.find(
+        h => h.food_item.toLowerCase() === value.toLowerCase()
+      );
+      if (match) {
+        this._addData = {
+          ...this._addData,
+          calories: match.calories !== undefined ? match.calories : this._addData.calories,
+          p: match.p !== undefined ? match.p : "",
+          c: match.c !== undefined ? match.c : "",
+          f: match.f !== undefined ? match.f : "",
+          a: match.a !== undefined ? match.a : ""
+        };
+      }
+    }
   };
 
   _onAddTimeInput = (e) => {
@@ -1992,6 +2026,9 @@ class DailyDataCard extends LitElement {
       <div class="modal" @click=${this._closeAddEntry}>
         <div class="modal-content" @click=${e => e.stopPropagation()}>
           <div class="modal-header">Add Entry</div>
+          <datalist id="food-history-list">
+            ${this._foodHistory?.map(item => html`<option value="${item.food_item}"></option>`)}
+          </datalist>
           <div style="margin-bottom: 16px;">
             <label>
               <input type="radio" name="add-type" value="food"
@@ -2024,6 +2061,7 @@ class DailyDataCard extends LitElement {
               <input
                 class="edit-input"
                 type="text"
+                list="food-history-list"
                 data-edit-field="food_item"
                 .value=${this._addData.food_item}
                 @input=${e => this._onAddInputChange(e, "food_item")}

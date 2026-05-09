@@ -114,6 +114,10 @@ class CalorieDailyDataCard extends HTMLElement {
         this.selectedDate = e.detail.date;
         this._updateCard();
       });
+      window.addEventListener("select-summary-date", (e) => {
+        this.selectedDate = e.detail.date;
+        this._updateCard();
+      });
       el.addEventListener("refresh-daily-data", () => {
         this._updateCard();
       });

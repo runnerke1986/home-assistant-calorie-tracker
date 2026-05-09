@@ -113,11 +113,15 @@ class CalorieGaugeCard extends HTMLElement {
 
     // Attach event listeners
     if (!this._eventsAttached) {
-      el.addEventListener("select-summary-date", (e) => {
+      window.addEventListener("select-summary-date", (e) => {
         this.selectedDate = e.detail.date;
         this._updateCard();
       });
-      el.addEventListener("refresh-summary", () => {
+      window.addEventListener("select-daily-date", (e) => {
+        this.selectedDate = e.detail.date;
+        this._updateCard();
+      });
+      window.addEventListener("refresh-summary", () => {
         this._updateCard();
       });
       this._eventsAttached = true;

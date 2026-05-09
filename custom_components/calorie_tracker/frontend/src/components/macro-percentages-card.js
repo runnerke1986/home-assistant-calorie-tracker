@@ -128,13 +128,17 @@ class MacroPercentagesCard extends HTMLElement {
       console.error('Failed to fetch macro data:', err);
     }
 
-    // Attach event listeners to the wrapper (no-op unless external code dispatches them)
+    // Attach event listeners to the window so they catch events from other cards
     if (!this._eventsAttached) {
-      wrapper.addEventListener('select-summary-date', (e) => {
+      window.addEventListener('select-summary-date', (e) => {
         this.selectedDate = e.detail.date;
         this._updateCard();
       });
-      wrapper.addEventListener('refresh-summary', () => {
+      window.addEventListener('select-daily-date', (e) => {
+        this.selectedDate = e.detail.date;
+        this._updateCard();
+      });
+      window.addEventListener('refresh-summary', () => {
         this._updateCard();
       });
       this._eventsAttached = true;
