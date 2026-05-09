@@ -1550,7 +1550,14 @@ class DailyDataCard extends LitElement {
       p: parseFloat(p) > 0 ? p : '',
       c: parseFloat(c) > 0 ? c : '',
       f: parseFloat(f) > 0 ? f : '',
-      a: ''
+      a: '',
+      amount_g: this._offPortion,
+      _history_base_amount_g: this._offPortion,
+      _history_base_calories: calories,
+      _history_base_p: parseFloat(p) > 0 ? parseFloat(p) : '',
+      _history_base_c: parseFloat(c) > 0 ? parseFloat(c) : '',
+      _history_base_f: parseFloat(f) > 0 ? parseFloat(f) : '',
+      _history_base_a: ''
     };
 
     this._closeOffSearch(); // This will also restore the Add Entry popup
@@ -1922,7 +1929,8 @@ class DailyDataCard extends LitElement {
       exercise_type: "",
       duration_minutes: "",
       calories_burned: 0,
-      time: `${hh}:${mm}`
+      time: `${hh}:${mm}`,
+      amount_g: "",
     };
     this._addError = "";
     this._showAddPopup = true;
@@ -1970,9 +1978,40 @@ class DailyDataCard extends LitElement {
           p: match.p !== undefined ? match.p : "",
           c: match.c !== undefined ? match.c : "",
           f: match.f !== undefined ? match.f : "",
-          a: match.a !== undefined ? match.a : ""
+          a: match.a !== undefined ? match.a : "",
+          amount_g: match.amount_g !== undefined ? match.amount_g : "",
+          _history_base_amount_g: match.amount_g,
+          _history_base_calories: match.calories,
+          _history_base_p: match.p,
+          _history_base_c: match.c,
+          _history_base_f: match.f,
+          _history_base_a: match.a,
         };
       }
+    }
+  };
+
+  _onAmountChange = (e) => {
+    let value = this._sanitizeDecimal(e.target.value);
+    if (value !== e.target.value) {
+      e.target.value = value;
+    }
+    
+    this._addData = { ...this._addData, amount_g: value };
+    this._addError = "";
+    
+    const newAmount = parseFloat(value);
+    if (this._addData._history_base_amount_g && !isNaN(newAmount) && newAmount > 0) {
+      const multiplier = newAmount / this._addData._history_base_amount_g;
+      const baseCal = this._addData._history_base_calories || 0;
+      this._addData = {
+        ...this._addData,
+        calories: Math.round(baseCal * multiplier),
+        p: this._addData._history_base_p ? (this._addData._history_base_p * multiplier).toFixed(1) : "",
+        c: this._addData._history_base_c ? (this._addData._history_base_c * multiplier).toFixed(1) : "",
+        f: this._addData._history_base_f ? (this._addData._history_base_f * multiplier).toFixed(1) : "",
+        a: this._addData._history_base_a ? (this._addData._history_base_a * multiplier).toFixed(1) : "",
+      };
     }
   };
 
@@ -2028,6 +2067,7 @@ class DailyDataCard extends LitElement {
             ...(this._isValidNumberStr(this._addData.c) ? { c: Number(this._addData.c) } : {}),
             ...(this._isValidNumberStr(this._addData.f) ? { f: Number(this._addData.f) } : {}),
             ...(this._isValidNumberStr(this._addData.a) ? { a: Number(this._addData.a) } : {}),
+            ...(this._isValidNumberStr(this._addData.amount_g) ? { amount_g: Number(this._addData.amount_g) } : {}),
           }
           : {
             exercise_type: this._addData.exercise_type,
@@ -2115,6 +2155,7 @@ class DailyDataCard extends LitElement {
                         <div style="font-weight:500; color:var(--primary-text-color, #333);">${item.food_item}</div>
                         <div style="font-size:0.85em; color:var(--secondary-text-color, #888);">
                           <span style="font-weight:600; color:var(--primary-color, #03a9f4);">${item.calories} Cal</span>
+                          ${item.amount_g ? html`<span style="margin-left:6px; font-weight:500;">(${item.amount_g}g)</span>` : ''}
                           ${item.p ? html` <span style="margin-left:6px;">P: ${item.p}g</span>` : ''}
                           ${item.c ? html` <span style="margin-left:6px;">C: ${item.c}g</span>` : ''}
                           ${item.f ? html` <span style="margin-left:6px;">F: ${item.f}g</span>` : ''}
@@ -2127,6 +2168,19 @@ class DailyDataCard extends LitElement {
                   </div>
                 ` : ''}
               </div>
+              
+              ${this._addData.amount_g !== undefined && this._addData.amount_g !== "" && this._addData._history_base_amount_g !== undefined ? html`
+                <div class="edit-label">Gewicht / Hoeveelheid (g) <small style="opacity:0.7">Schaalt macro's</small></div>
+                <input
+                  class="edit-input"
+                  type="text"
+                  inputmode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  .value=${this._addData.amount_g}
+                  @input=${this._onAmountChange}
+                />
+              ` : ''}
+              
               <div class="edit-label">Calories</div>
               <input
                 class="edit-input"

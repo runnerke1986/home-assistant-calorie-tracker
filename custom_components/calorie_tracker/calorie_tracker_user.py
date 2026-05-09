@@ -346,11 +346,12 @@ class CalorieTrackerUser:
         p: int | None = None,
         f: int | None = None,
         a: int | None = None,
+        amount_g: float | None = None,
     ) -> None:
         """Asynchronously log a food entry and persist it."""
         ts = _normalize_local_timestamp(timestamp)
         # Pass optional macro grams to storage
-        self._storage.add_food_entry(ts, food_item, calories, c=c, p=p, f=f, a=a)
+        self._storage.add_food_entry(ts, food_item, calories, c=c, p=p, f=f, a=a, amount_g=amount_g)
         await self._storage.async_save()
 
     def get_daily_macros(self, date_str: str | None = None) -> dict[str, int]:

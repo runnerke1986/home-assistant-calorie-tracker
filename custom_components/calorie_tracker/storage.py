@@ -166,6 +166,7 @@ class CalorieStorageManager(StorageProtocol):
         p: float | None = None,
         f: float | None = None,
         a: float | None = None,
+        amount_g: float | None = None,
     ) -> None:
         """Add a new food entry to the in-memory store (timestamp should be local time).
 
@@ -200,6 +201,12 @@ class CalorieStorageManager(StorageProtocol):
             try:
                 if float(a) != 0.0:
                     entry["a"] = float(a)
+            except (ValueError, TypeError):
+                pass
+        if amount_g is not None:
+            try:
+                if float(amount_g) > 0:
+                    entry["amount_g"] = float(amount_g)
             except (ValueError, TypeError):
                 pass
 

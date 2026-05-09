@@ -409,6 +409,7 @@ async def websocket_create_entry(hass: HomeAssistant, connection, msg):
             p=entry.get("p"),
             f=entry.get("f"),
             a=entry.get("a"),
+            amount_g=entry.get("amount_g"),
         )
     elif entry_type == "exercise":
         await user.async_log_exercise(
@@ -780,6 +781,7 @@ async def websocket_get_food_history(hass: HomeAssistant, connection, msg):
                 "p": entry.get("p"),
                 "f": entry.get("f"),
                 "a": entry.get("a"),
+                "amount_g": entry.get("amount_g"),
             }
             
     history = list(history_dict.values())
